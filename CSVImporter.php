@@ -115,7 +115,7 @@ class CSVImporter {
     }
 
     /**
-     * Will validate model for unique before the insert. TODO. use exists.
+     * Will validate model for unique before the insert.
      * 
      * @param string $class \yii\db\ActiveRecord class name
      * @param array $attributes

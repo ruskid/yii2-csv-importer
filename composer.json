@@ -1,0 +1,21 @@
+{
+    "name": "ruskid/yii2-excel-importer",
+    "description": "Helper to import csv files into tables",
+    "type": "yii2-extension",
+    "keywords": ["yii2"," excel"," importer"],
+    "license": "GPL-2.0",
+    "authors": [
+        {
+            "name": "Victor Demin",
+            "email": "demin@trabeja.com"
+        }
+    ],
+    "require": {
+        "yiisoft/yii2": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "ruskid\\csvimporter\\": ""
+        }
+    }
+}

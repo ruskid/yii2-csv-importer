@@ -17,7 +17,7 @@ use Exception;
 class CSVImporter {
 
     /**
-     * Excel's parsed rows. Arrays of arrays
+     * Excel's parsed rows.
      * @var array
      */
     private $_rows = [];
@@ -32,8 +32,7 @@ class CSVImporter {
 
     /**
      * @param string $filename
-     * @param integer $start Start from 1 if there is HEADER row.
-     * @param integer $expectedColsCount Validate import by counting columns and expected number of columns.
+     * @param integer $startRow Start from 1 if there is HEADER row.
      * @throws Exception
      */
     public function __construct($filename, $startRow = 1) {
@@ -47,7 +46,6 @@ class CSVImporter {
     /**
      * Will set rows reading the CSV file.
      * @param string $filename
-     * @param integer $start
      * @return array
      */
     private function getAllRows($filename) {
@@ -74,40 +72,107 @@ class CSVImporter {
     }
 
     /**
-     * Import from CSV. This will create/save an ActiveRecord object per excel row.
-     *
-     * - <b>attribute</b> is the attribute of the ActiveRecord
-     * - <b>value</b> \Closure an anonymous function that is used to determine the value to insert. Excepts 1 parameter
-     * that points to the line of the excel file.
-     * - <b>unique</b> boolean, if to perform unique check for the attribute.
+     * Will get attribute list for multiple insert
+     * @param array $configs
+     * @return array
+     */
+    private function prepareAttributes($configs) {
+        $attributes = [];
+        foreach ($configs as $config) {
+            $attributes[] = $config['attribute'];
+        }
+        return $attributes;
+    }
+
+    /**
+     * Will get value list for multple insert
+     * @param array $configs
+     * @return array
+     */
+    private function prepareValues($configs) {
+        $values = [];
+        $rows = $this->getRows();
+        foreach ($rows as $i => $row) {
+            foreach ($configs as $config) {
+                $values[$i][$config['attribute']] = call_user_func($config['value'], $row);
+            }
+        }
+        return $values;
+    }
+
+    /**
+     * Will filter values per unique parameters. Config array can receive 1+ unique parameters.
+     * @param array $values
+     * @param array $configs
+     * @return array
+     */
+    private function filterUniqueValues($values, $configs) {
+        //Get unique attributes
+        $uniqueAttributes = [];
+        foreach ($configs as $config) {
+            if (isset($config['unique']) && $config['unique']) {
+                $uniqueAttributes[] = $config['attribute'];
+            }
+        }
+        //Filter values per attributes
+        $uniqueValues = [];
+        foreach ($values as $value) {
+            $hash = ""; //generate hash per 1+ unique parameters
+            foreach ($uniqueAttributes as $ua) {
+                $hash = $hash . $value[$ua];
+            }
+            $uniqueValues[$hash] = $value;
+        }
+        return $uniqueValues;
+    }
+
+    /**
+     * Will import from CSV. This will batch insert the rows, no validation is performed. 
+     * This is the fastest way to insert big amounts of data.
      * 
+     * @param string $tableName
+     * @param array $configs Attribute configs on how to import data.
+     * @return integer number of rows affected
+     */
+    public function importMultiple($tableName, $configs) {
+        $attributes = $this->prepareAttributes($configs);
+        $allValues = $this->prepareValues($configs);
+        $uniqueValues = $this->filterUniqueValues($allValues, $configs);
+
+        return \Yii::$app->db->createCommand()
+                        ->batchInsert($tableName, $attributes, $uniqueValues)->execute();
+    }
+
+    /**
+     * Import from CSV. This will create/validate/save an ActiveRecord object per excel row. 
+     * This is the slowest way to insert, but most reliable. Use it with small amounts of data.
+     *
      * @param string $class ActiveRecord class name
-     * @param array $configs Attribute config on how to import data.
-     * @return integer Number of successful inserts
+     * @param array $configs Attribute configs on how to import data.
+     * @return integer number of rows affected
      */
     public function import($class, $configs) {
         $rows = $this->getRows();
         $countInserted = 0;
-        foreach ($rows as $line) {
+        foreach ($rows as $row) {
             /* @var $model \yii\db\ActiveRecord */
             $model = new $class;
             $uniqueAttributes = [];
             foreach ($configs as $config) {
                 if (isset($config['attribute']) && $model->hasAttribute($config['attribute'])) {
-                    //Get value by calling anonymous function
-                    $value = call_user_func($config['value'], $line);
+                    $value = call_user_func($config['value'], $row);
 
-                    //Create array of unique attributes and the values to insert for later check
+                    //Create array of unique attributes
                     if (isset($config['unique']) && $config['unique']) {
                         $uniqueAttributes[$config['attribute']] = $value;
                     }
-                    
+
                     //Set value to the model
                     $model->setAttribute($config['attribute'], $value);
                 }
             }
-            //Save model if passes unique check
-            if ($this->notExists($class, $uniqueAttributes)) {
+            //Check if generated Active Record is unique by query.
+            if ($this->isActiveRecordUnique($class, $uniqueAttributes)) {
                 $countInserted = $countInserted + $model->save();
             }
         }
@@ -115,17 +180,14 @@ class CSVImporter {
     }
 
     /**
-     * Will validate model for unique before the insert.
-     * 
+     * Will check if current Active Record is unique by exists query.
      * @param string $class \yii\db\ActiveRecord class name
      * @param array $attributes
      * @return boolean
      */
-    private function notExists($class, $attributes) {
-        if (empty($attributes)) {
-            return true;
-        }
-       return !$class::find()->where($attributes)->exists();
+    private function isActiveRecordUnique($class, $attributes) {
+        return empty($attributes) ? true :
+                !$class::find()->where($attributes)->exists();
     }
 
 }

@@ -17,6 +17,17 @@ use Exception;
 class CSVImporter {
 
     /**
+     * Limit items per single insert query. Used in multipleImport().
+     * On batch insert the single query can become huge and you can get mysql exception: 
+     * "Communication link failure: 1153 Got a packet bigger than 'max_allowed_packet' bytes". 
+     * 
+     * This parameter will divide array of values in chunks and then execute multiple 
+     * insert queries. If you don't want this limit, set it to 0 (not recommended). 
+     * @var integer 
+     */
+    public $maxItemsPerInsert = 10000;
+
+    /**
      * Excel's parsed rows.
      * @var array
      */
@@ -114,12 +125,12 @@ class CSVImporter {
                 $uniqueAttributes[] = $config['attribute'];
             }
         }
-        
-        if(empty($uniqueAttributes)){
-            return $values;
+
+        if (empty($uniqueAttributes)) {
+            return $values; //Return all values
         }
-        
-        //Filter values per attributes
+
+        //Filter values per unique attributes
         $uniqueValues = [];
         foreach ($values as $value) {
             $hash = ""; //generate hash per 1+ unique parameters
@@ -144,8 +155,19 @@ class CSVImporter {
         $allValues = $this->prepareValues($configs);
         $uniqueValues = $this->filterUniqueValues($allValues, $configs);
 
-        return \Yii::$app->db->createCommand()
-                        ->batchInsert($tableName, $attributes, $uniqueValues)->execute();
+        if ($this->maxItemsPerInsert && count($uniqueValues) > $this->maxItemsPerInsert) {
+            //Execute multiple queries
+            $countInserts = 0;
+            $chunks = array_chunk($uniqueValues, $this->maxItemsPerInsert);
+            foreach ($chunks as $chunk) {
+                $countInserts = $countInserts + \Yii::$app->db->createCommand()
+                            ->batchInsert($tableName, $attributes, $chunk)->execute();
+            }
+            return $countInserts;
+        } else {//Execute single query
+            return \Yii::$app->db->createCommand()
+                            ->batchInsert($tableName, $attributes, $uniqueValues)->execute();
+        }
     }
 
     /**

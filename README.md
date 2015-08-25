@@ -24,14 +24,14 @@ to the require section of your `composer.json` file.
 Usage
 -----
 There are 2 import functions:
-<b>importMultiple()<b> - is for big amount of data, it is batch insert as is without any validation.
-<b>import()</b> - is for small amount of data, it recreates Active Record and performs validation.
+<p><b>importMultiple()</b> - is for big amount of data, it is batch insert as is without any validation.</p>
+<p><b>import()</b> - is for small amount of data, it recreates Active Record and performs validation.</p>
 
 Both accept array of attributes with their configs:
-<b>attribute</b> is the attribute of the ActiveRecord
-<b>value</b> \Closure an anonymous function that is used to determine the value to insert. Excepts 1 parameter
-that points to the line of the excel file.
-<b>unique</b> boolean, if to perform unique check for the attribute.
+<p><b>attribute</b> is the attribute of the ActiveRecord</p>
+<p><b>value</b> \Closure an anonymous function that is used to determine the value to insert. Excepts 1 parameter
+that points to the line of the excel file.</p>
+<p><b>unique</b> boolean, if to perform unique check for the attribute.</p>
 
 ```php
 $importer = new CSVImporter($this->file->tempName, 1);

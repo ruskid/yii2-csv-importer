@@ -29,7 +29,7 @@ There are 2 import functions:
 
 Both accept array of attributes with their configs:
 <p><b>attribute</b> is the attribute of the ActiveRecord</p>
-<p><b>value</b> \Closure an anonymous function that is used to determine the value to insert. Excepts 1 parameter
+<p><b>value</b> \Closure an anonymous function that is used to determine the value to insert. Accepts 1 parameter
 that points to the line of the excel file.</p>
 <p><b>unique</b> boolean, if to perform unique check for the attribute.</p>
 

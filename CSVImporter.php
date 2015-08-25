@@ -114,6 +114,11 @@ class CSVImporter {
                 $uniqueAttributes[] = $config['attribute'];
             }
         }
+        
+        if(empty($uniqueAttributes)){
+            return $values;
+        }
+        
         //Filter values per attributes
         $uniqueValues = [];
         foreach ($values as $value) {

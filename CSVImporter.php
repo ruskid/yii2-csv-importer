@@ -46,23 +46,24 @@ class CSVImporter {
      * @param integer $startRow Start from 1 if there is HEADER row.
      * @throws Exception
      */
-    public function __construct($filename, $startRow = 1) {
+    public function __construct($filename, $startRow = 1, $fieldDelimiter = ';') {
         if (!file_exists($filename)) {
             throw new Exception(__CLASS__ . ' couldn\'t find the CSV file.');
         }
-        $allRows = $this->getAllRows($filename); //Read file
-        $this->_rows = $this->removeUnusedRows($allRows, $startRow); //Filter rows
+        $this->_rows = $this->getAllRows($filename, $fieldDelimiter); //Read file
+        $this->removeUnusedRows($this->_rows, $startRow); //Filter rows
     }
 
     /**
      * Will set rows reading the CSV file.
      * @param string $filename
+     * @param string $fieldDelimiter
      * @return array
      */
-    private function getAllRows($filename) {
+    private function getAllRows($filename, $fieldDelimiter) {
         $allRows = [];
         if (($fp = fopen($filename, 'r')) !== FALSE) {
-            while (($line = fgetcsv($fp, 0, ";")) !== FALSE) {
+            while (($line = fgetcsv($fp, 0, $fieldDelimiter)) !== FALSE) {
                 array_push($allRows, $line);
             }
         }
@@ -73,13 +74,11 @@ class CSVImporter {
      * Will remove unused rows by start row index.
      * @param array $rows
      * @param integer $start
-     * @return array
      */
-    private function removeUnusedRows($rows, $start) {
+    private function removeUnusedRows(&$rows, $start) {
         for ($i = 0; $i < $start; $i++) {
             unset($rows[$i]);
         }
-        return $rows;
     }
 
     /**

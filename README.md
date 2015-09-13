@@ -9,7 +9,7 @@ The preferred way to install this extension is through [composer](http://getcomp
 Either run
 
 ```
-php composer.phar require --prefer-dist ruskid/yii2-excel-importer "*"
+php composer.phar require --prefer-dist ruskid/yii2-excel-importer "dev-master"
 ```
 
 or add

@@ -24,39 +24,38 @@ to the require section of your `composer.json` file.
 Usage
 -----
 
-Both classes accept array of attributes with their configs:
-<p><b>attribute</b> is the attribute of the ActiveRecord</p>
-<p><b>value</b> \Closure an anonymous function that is used to determine the value to insert. Accepts 1 parameter
-that points to the line of the excel file.</p>
-<p><b>unique</b> boolean, if to perform unique check for the attribute.</p>
-
 ```php
-//Fast but not reliable
-$importer = new \ruskid\csvimporter\MultipleImport($this->file->tempName, Pregunta::tableName(), [
-    [
-        'attribute' => 'name',
-        'value' => function($line) {
-            return $line[9];
-        },
-        'unique' => true
+$importer = new CSVImporter;
+$importer->setData(new CSVReader([
+    'filename' => $this->file->tempName,
+    'fgetcsvOptions' => [
+        'delimiter' => ';'
+    ]
+]));
+//Import multiple of Vendor types (Fast but not reliable)
+$importer->import(new MultipleImportStrategy([
+    'tableName' => VendorSwType::tableName(),
+    'configs' => [
+        [
+            'attribute' => 'name',
+            'value' => function($line) {
+                return $line[1];
+            },
+            'unique' => true,//optional
+        ]
     ],
-    [
-        'attribute' => 'surname',
-        'value' => function($line) {
-            return $line[0];
-        },
+]));
+//Import Active Records (Slow, but more reliable)
+$importer->import(new ARImportStrategy([
+    'className' => BusinessType::className(),
+    'configs' => [
+        [
+            'attribute' => 'name',
+            'value' => function($line) {
+                return $line[2];
+            },
+            'unique' => true,//optional
+        ]
     ],
-]);
-$importer->import();
-
-//Slow but reliable
- $importer = new \ruskid\csvimporter\ActiveRecordImport($this->file->tempName, Pregunta::className(), [
-    [
-        'attribute' => 'name',
-        'value' => function($line) {
-            return $line[9];
-        },
-    ],
-]);
-$importer->import();
+]));
 ```

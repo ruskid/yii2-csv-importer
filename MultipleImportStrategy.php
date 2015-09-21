@@ -8,8 +8,8 @@
 
 namespace ruskid\csvimporter;
 
+use yii\base\Exception;
 use ruskid\csvimporter\ImportInterface;
-use ruskid\csvimporter\CSVReader;
 
 /**
  * Will import from CSV. This will batch insert the rows, no validation is performed. 
@@ -17,8 +17,8 @@ use ruskid\csvimporter\CSVReader;
  * 
  * @author Victor Demin <demin@trabeja.com>
  */
-class MultipleImport extends CSVReader implements ImportInterface {
-
+class MultipleImportStrategy implements ImportInterface {
+    
     /**
      * Table name where to import data
      * @var string
@@ -43,24 +43,32 @@ class MultipleImport extends CSVReader implements ImportInterface {
     public $maxItemsPerInsert = 10000;
 
     /**
-     * @param string $filename the path of the uploaded CSV file on the server.
-     * @param string $tableName
-     * @param array $configs
+     * @throws Exception
      */
-    public function __construct($filename, $tableName, $configs) {
-        parent::__construct($filename);
-        $this->tableName = $tableName;
-        $this->configs = $configs;
+    public function __construct() {
+        $arguments = func_get_args();
+        if (!empty($arguments))
+            foreach ($arguments[0] as $key => $property)
+                if (property_exists($this, $key))
+                    $this->{$key} = $property;
+        
+        if($this->tableName === null){
+            throw new Exception(__CLASS__ . ' tableName is required.');
+        }
+        if($this->configs === null){
+            throw new Exception(__CLASS__ . ' configs is required.');
+        }
     }
 
     /**
      * Will multiple import data into table
+     * @param array $data CSV data passed by reference to save memory.
      * @return integer number of rows affected
      */
-    public function import() {
+    public function import(&$data) {
         $attributes = $this->getAttributes();
-        $values = $this->getValues();
-        
+        $values = $this->getValues($data);
+
         if ($this->maxItemsPerInsert && count($values) > $this->maxItemsPerInsert) {
             //Execute multiple queries
             $countInserts = 0;
@@ -90,17 +98,17 @@ class MultipleImport extends CSVReader implements ImportInterface {
 
     /**
      * Will get value list from the config
+     * @param array $data CSV data
      * @return array
      */
-    private function getValues() {
+    private function getValues(&$data) {
         $values = [];
-        $rows = $this->getRows();
-        foreach ($rows as $i => $row) {
+        foreach ($data as $i => $row) {
             foreach ($this->configs as $config) {
                 $values[$i][$config['attribute']] = call_user_func($config['value'], $row);
             }
         }
-        $this->filterUniqueValues($values);
+        $values = $this->filterUniqueValues($values);
         return $values;
     }
 
@@ -108,7 +116,7 @@ class MultipleImport extends CSVReader implements ImportInterface {
      * Will filter values per unique parameters. Config array can receive 1+ unique parameters.
      * @param array $values
      */
-    private function filterUniqueValues(&$values) {
+    private function filterUniqueValues($values) {
         //Get unique attributes
         $uniqueAttributes = [];
         foreach ($this->configs as $config) {
@@ -116,7 +124,7 @@ class MultipleImport extends CSVReader implements ImportInterface {
                 $uniqueAttributes[] = $config['attribute'];
             }
         }
-
+        
         if (empty($uniqueAttributes)) {
             return $values; //Return all values
         }
@@ -126,7 +134,7 @@ class MultipleImport extends CSVReader implements ImportInterface {
         foreach ($values as $value) {
             $hash = ""; //generate hash per 1+ unique parameters
             foreach ($uniqueAttributes as $ua) {
-                $hash = $hash . $value[$ua];
+                $hash .= $value[$ua];
             }
             $uniqueValues[$hash] = $value;
         }

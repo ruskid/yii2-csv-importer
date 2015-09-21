@@ -34,29 +34,28 @@ class CSVReader {
     public $startFromLine = 1;
 
     /**
-     * CSV data
-     * @var array
-     */
-    protected $_rows = null;
-    
-    /**
      * Will get CSV data
      * @return array
      */
     public function getRows() {
-        if($this->_rows === null){
-            $this->_rows = $this->readFile();
-        }
-        return $this->_rows;
+        return $this->readFile();
     }
 
     /**
-     * @param string $filename the path of the uploaded CSV file on the server.
+     * @throws Exception
      */
-    public function __construct($filename) {
-        $this->filename = $filename;
+    public function __construct() {
+        $arguments = func_get_args();
+        if (!empty($arguments))
+            foreach ($arguments[0] as $key => $property)
+                if (property_exists($this, $key))
+                    $this->{$key} = $property;
+
+        if ($this->filename === null) {
+            throw new Exception(__CLASS__ . ' filename is required.');
+        }
     }
-    
+
     /**
      * Will read CSV file into array
      * @throws Exception
@@ -71,8 +70,8 @@ class CSVReader {
         $delimiter = isset($this->fgetcsvOptions['delimiter']) ? $this->fgetcsvOptions['delimiter'] : ',';
         $enclosure = isset($this->fgetcsvOptions['enclosure']) ? $this->fgetcsvOptions['enclosure'] : '"';
         $escape = isset($this->fgetcsvOptions['escape']) ? $this->fgetcsvOptions['escape'] : "\\";
-        
-        $lines = [];//Clear and set rows
+
+        $lines = []; //Clear and set rows
         if (($fp = fopen($this->filename, 'r')) !== FALSE) {
             while (($line = fgetcsv($fp, $length, $delimiter, $enclosure, $escape)) !== FALSE) {
                 array_push($lines, $line);
@@ -84,4 +83,5 @@ class CSVReader {
         }
         return $lines;
     }
+
 }

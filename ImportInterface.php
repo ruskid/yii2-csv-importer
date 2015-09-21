@@ -13,5 +13,9 @@ namespace ruskid\csvimporter;
  */
 interface ImportInterface {
 
-    public function import();
+    /**
+     * Data is passed by reference to save memory. CSV data can be huge
+     * @param array $data
+     */
+    public function import(&$data);
 }

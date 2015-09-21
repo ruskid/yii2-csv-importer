@@ -8,8 +8,8 @@
 
 namespace ruskid\csvimporter;
 
+use yii\base\Exception;
 use ruskid\csvimporter\ImportInterface;
-use ruskid\csvimporter\CSVReader;
 
 /**
  * Import from CSV. This will create/validate/save an ActiveRecord object per excel line. 
@@ -17,7 +17,7 @@ use ruskid\csvimporter\CSVReader;
  * 
  * @author Victor Demin <demin@trabeja.com>
  */
-class ActiveRecordImport extends CSVReader implements ImportInterface {
+class ARImportStrategy implements ImportInterface {
 
     /**
      * ActiveRecord class name
@@ -32,24 +32,31 @@ class ActiveRecordImport extends CSVReader implements ImportInterface {
     public $configs;
 
     /**
-     * @param string $filename the path of the uploaded CSV file on the server.
-     * @param string $className
-     * @param array $configs
+     * @throws Exception
      */
-    public function __construct($filename, $className, $configs) {
-        parent::__construct($filename);
-        $this->className = $className;
-        $this->configs = $configs;
+    public function __construct() {
+        $arguments = func_get_args();
+        if (!empty($arguments))
+            foreach ($arguments[0] as $key => $property)
+                if (property_exists($this, $key))
+                    $this->{$key} = $property;
+
+        if ($this->className === null) {
+            throw new Exception(__CLASS__ . ' className is required.');
+        }
+        if ($this->configs === null) {
+            throw new Exception(__CLASS__ . ' configs is required.');
+        }
     }
 
     /**
      * Will multiple import data into table
+     * @param array $data CSV data passed by reference to save memory.
      * @return integer number of rows affected
      */
-    public function import() {
-        $rows = $this->getRows();
+    public function import(&$data) {
         $countInserted = 0;
-        foreach ($rows as $row) {
+        foreach ($data as $row) {
             /* @var $model \yii\db\ActiveRecord */
             $model = new $this->className;
             $uniqueAttributes = [];

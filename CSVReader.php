@@ -14,7 +14,7 @@ use Exception;
  * Little CSV import helper for Yii2
  * @author Victor Demin <demin@trabeja.com>
  */
-class CSVImporter {
+class CSVReader {
 
     /**
      * @var string the path of the uploaded CSV file on the server.

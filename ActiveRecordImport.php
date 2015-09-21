@@ -9,7 +9,7 @@
 namespace ruskid\csvimporter;
 
 use ruskid\csvimporter\ImportInterface;
-use ruskid\csvimporter\CSVImporter;
+use ruskid\csvimporter\CSVReader;
 
 /**
  * Import from CSV. This will create/validate/save an ActiveRecord object per excel line. 
@@ -17,7 +17,7 @@ use ruskid\csvimporter\CSVImporter;
  * 
  * @author Victor Demin <demin@trabeja.com>
  */
-class ActiveRecordImport extends CSVImporter implements ImportInterface {
+class ActiveRecordImport extends CSVReader implements ImportInterface {
 
     /**
      * ActiveRecord class name

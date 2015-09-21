@@ -9,7 +9,7 @@
 namespace ruskid\csvimporter;
 
 use ruskid\csvimporter\ImportInterface;
-use ruskid\csvimporter\CSVImporter;
+use ruskid\csvimporter\CSVReader;
 
 /**
  * Will import from CSV. This will batch insert the rows, no validation is performed. 
@@ -17,7 +17,7 @@ use ruskid\csvimporter\CSVImporter;
  * 
  * @author Victor Demin <demin@trabeja.com>
  */
-class MultipleImport extends CSVImporter implements ImportInterface {
+class MultipleImport extends CSVReader implements ImportInterface {
 
     /**
      * Table name where to import data

@@ -18,7 +18,7 @@ use ruskid\csvimporter\ImportInterface;
  * @author Victor Demin <demin@trabeja.com>
  */
 class MultipleImportStrategy implements ImportInterface {
-    
+
     /**
      * Table name where to import data
      * @var string
@@ -51,11 +51,11 @@ class MultipleImportStrategy implements ImportInterface {
             foreach ($arguments[0] as $key => $property)
                 if (property_exists($this, $key))
                     $this->{$key} = $property;
-        
-        if($this->tableName === null){
+
+        if ($this->tableName === null) {
             throw new Exception(__CLASS__ . ' tableName is required.');
         }
-        if($this->configs === null){
+        if ($this->configs === null) {
             throw new Exception(__CLASS__ . ' configs is required.');
         }
     }
@@ -69,19 +69,13 @@ class MultipleImportStrategy implements ImportInterface {
         $attributes = $this->getAttributes();
         $values = $this->getValues($data);
 
-        if ($this->maxItemsPerInsert && count($values) > $this->maxItemsPerInsert) {
-            //Execute multiple queries
-            $countInserts = 0;
-            $chunks = array_chunk($values, $this->maxItemsPerInsert);
-            foreach ($chunks as $chunk) {
-                $countInserts = $countInserts + \Yii::$app->db->createCommand()
+        $countInserts = 0;
+        $chunks = array_chunk($values, $this->maxItemsPerInsert);
+        foreach($chunks as $chunk){//Execute multiple queries
+            $countInserts += \Yii::$app->db->createCommand()
                                 ->batchInsert($this->tableName, $attributes, $chunk)->execute();
-            }
-            return $countInserts;
-        } else {//Execute single query
-            return \Yii::$app->db->createCommand()
-                            ->batchInsert($this->tableName, $attributes, $values)->execute();
         }
+        return $countInserts;
     }
 
     /**
@@ -105,9 +99,14 @@ class MultipleImportStrategy implements ImportInterface {
         $values = [];
         foreach ($data as $i => $row) {
             foreach ($this->configs as $config) {
-                $values[$i][$config['attribute']] = call_user_func($config['value'], $row);
+                $value = call_user_func($config['value'], $row);
+                //Do not save empty values if empty true not set explicitly
+                if (!empty($value) || (isset($config['empty']) && $config['empty'])) {
+                    $values[$i][$config['attribute']] = $value;
+                }
             }
         }
+        //Filter unique values by unique attributes
         $values = $this->filterUniqueValues($values);
         return $values;
     }
@@ -124,7 +123,7 @@ class MultipleImportStrategy implements ImportInterface {
                 $uniqueAttributes[] = $config['attribute'];
             }
         }
-        
+
         if (empty($uniqueAttributes)) {
             return $values; //Return all values
         }

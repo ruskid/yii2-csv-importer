@@ -9,13 +9,13 @@ The preferred way to install this extension is through [composer](http://getcomp
 Either run
 
 ```
-php composer.phar require --prefer-dist ruskid/yii2-excel-importer "dev-master"
+php composer.phar require --prefer-dist ruskid/yii2-csv-importer "dev-master"
 ```
 
 or add
 
 ```
-"ruskid/yii2-excel-importer": "*"
+"ruskid/yii2-csv-importer": "*"
 ```
 
 to the require section of your `composer.json` file.

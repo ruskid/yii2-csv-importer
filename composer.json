@@ -1,8 +1,8 @@
 {
-    "name": "ruskid/yii2-excel-importer",
-    "description": "Helper to import csv files into tables",
+    "name": "ruskid/yii2-csv-importer",
+    "description": "Helper to import csv files into database",
     "type": "yii2-extension",
-    "keywords": ["yii2"," excel"," importer"],
+    "keywords": ["yii2", "csv", "excel", "importer"],
     "license": "GPL-2.0",
     "authors": [
         {

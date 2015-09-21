@@ -2,8 +2,8 @@
 
 /**
  * @copyright Copyright Victor Demin, 2015
- * @license https://github.com/ruskid/yii2-excel-importer/LICENSE
- * @link https://github.com/ruskid/yii2-excel-importer#README
+ * @license https://github.com/ruskid/yii2-csv-importer/LICENSE
+ * @link https://github.com/ruskid/yii2-csv-importer#README
  */
 
 namespace ruskid\csvimporter;

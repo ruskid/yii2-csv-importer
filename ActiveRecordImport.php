@@ -24,13 +24,24 @@ class ActiveRecordImport extends CSVImporter implements ImportInterface {
      * @var string
      */
     public $className;
-    
+
     /**
      * Attribute configs on how to import data.
      * @var array
      */
     public $configs;
-    
+
+    /**
+     * @param string $filename the path of the uploaded CSV file on the server.
+     * @param string $className
+     * @param array $configs
+     */
+    public function __construct($filename, $className, $configs) {
+        parent::__construct($filename);
+        $this->className = $className;
+        $this->configs = $configs;
+    }
+
     /**
      * Will multiple import data into table
      * @return integer number of rows affected

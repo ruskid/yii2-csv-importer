@@ -23,7 +23,7 @@ class CSVImporter {
      * @param CSVReader $reader
      */
     public function setData(CSVReader $reader) {
-        $this->_data = $reader->getRows();
+        $this->_data = $reader->readFile();
     }
 
     /**

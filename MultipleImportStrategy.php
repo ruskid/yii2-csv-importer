@@ -10,6 +10,7 @@ namespace ruskid\csvimporter;
 
 use yii\base\Exception;
 use ruskid\csvimporter\ImportInterface;
+use ruskid\csvimporter\BaseImportStrategy;
 
 /**
  * Will import from CSV. This will batch insert the rows, no validation is performed. 
@@ -17,7 +18,7 @@ use ruskid\csvimporter\ImportInterface;
  * 
  * @author Victor Demin <demin@trabeja.com>
  */
-class MultipleImportStrategy implements ImportInterface {
+class MultipleImportStrategy extends BaseImportStrategy implements ImportInterface {
 
     /**
      * Table name where to import data
@@ -46,12 +47,7 @@ class MultipleImportStrategy implements ImportInterface {
      * @throws Exception
      */
     public function __construct() {
-        $arguments = func_get_args();
-        if (!empty($arguments))
-            foreach ($arguments[0] as $key => $property)
-                if (property_exists($this, $key))
-                    $this->{$key} = $property;
-
+        parent::__construct();
         if ($this->tableName === null) {
             throw new Exception(__CLASS__ . ' tableName is required.');
         }

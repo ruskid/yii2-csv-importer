@@ -10,6 +10,7 @@ namespace ruskid\csvimporter;
 
 use yii\base\Exception;
 use ruskid\csvimporter\ImportInterface;
+use ruskid\csvimporter\BaseImportStrategy;
 
 /**
  * Import from CSV. This will create/validate/save an ActiveRecord object per excel line. 
@@ -17,7 +18,7 @@ use ruskid\csvimporter\ImportInterface;
  * 
  * @author Victor Demin <demin@trabeja.com>
  */
-class ARImportStrategy implements ImportInterface {
+class ARImportStrategy extends BaseImportStrategy implements ImportInterface {
 
     /**
      * ActiveRecord class name
@@ -35,12 +36,7 @@ class ARImportStrategy implements ImportInterface {
      * @throws Exception
      */
     public function __construct() {
-        $arguments = func_get_args();
-        if (!empty($arguments))
-            foreach ($arguments[0] as $key => $property)
-                if (property_exists($this, $key))
-                    $this->{$key} = $property;
-
+        parent::__construct();
         if ($this->className === null) {
             throw new Exception(__CLASS__ . ' className is required.');
         }

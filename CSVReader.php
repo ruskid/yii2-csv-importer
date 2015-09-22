@@ -11,7 +11,7 @@ namespace ruskid\csvimporter;
 use Exception;
 
 /**
- * Little CSV import helper for Yii2
+ * CSV Reader
  * @author Victor Demin <demin@trabeja.com>
  */
 class CSVReader {
@@ -34,22 +34,17 @@ class CSVReader {
     public $startFromLine = 1;
 
     /**
-     * Will get CSV data
-     * @return array
-     */
-    public function getRows() {
-        return $this->readFile();
-    }
-
-    /**
      * @throws Exception
      */
     public function __construct() {
         $arguments = func_get_args();
-        if (!empty($arguments))
-            foreach ($arguments[0] as $key => $property)
-                if (property_exists($this, $key))
+        if (!empty($arguments)) {
+            foreach ($arguments[0] as $key => $property) {
+                if (property_exists($this, $key)) {
                     $this->{$key} = $property;
+                }
+            }
+        }
 
         if ($this->filename === null) {
             throw new Exception(__CLASS__ . ' filename is required.');
@@ -61,7 +56,7 @@ class CSVReader {
      * @throws Exception
      * @return $array csv filtered data 
      */
-    private function readFile() {
+    public function readFile() {
         if (!file_exists($this->filename)) {
             throw new Exception(__CLASS__ . ' couldn\'t find the CSV file.');
         }

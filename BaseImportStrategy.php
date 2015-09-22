@@ -8,6 +8,8 @@
 
 namespace ruskid\csvimporter;
 
+use yii\base\Exception;
+
 /**
  * Base Strategy
  * @author Victor Demin <demin@trabeja.com>
@@ -25,11 +27,12 @@ class BaseImportStrategy {
      * and stop import. 
      * @param string $value
      * @param array $config
+     * @param integer $line Line in csv
      * @throws Exception
      */
-    protected function checkValueForEmpty($value, $config) {
+    protected function checkValueForEmpty($value, $config, $line) {
         if (empty($value) && isset($config['empty']) && $config['empty'] == false) {
-            throw new Exception(__CLASS__ . ' "' . $config['attribute'] . '" has empty rows.');
+            throw new Exception(__CLASS__ . ' "' . $config['attribute'] . '" has empty rows. Check line - ' . $line);
         }
     }
 

@@ -98,7 +98,7 @@ class MultipleImportStrategy extends BaseImportStrategy implements ImportInterfa
         foreach ($data as $i => $row) {
             foreach ($this->configs as $config) {
                 $value = call_user_func($config['value'], $row);
-                $this->checkValueForEmpty($value, $config);
+                $this->checkValueForEmpty($value, $config, $i);
                 $values[$i][$config['attribute']] = $value;
             }
         }

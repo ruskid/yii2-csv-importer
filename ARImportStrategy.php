@@ -50,10 +50,10 @@ class ARImportStrategy extends BaseImportStrategy implements ImportInterface {
     /**
      * Will multiple import data into table
      * @param array $data CSV data passed by reference to save memory.
-     * @return integer number of rows affected
+     * @return array Primary keys of imported data
      */
     public function import(&$data) {
-        $countInserted = 0;
+        $importedPks = [];
         foreach ($data as $i => $row) {
             /* @var $model \yii\db\ActiveRecord */
             $model = new $this->className;
@@ -72,12 +72,12 @@ class ARImportStrategy extends BaseImportStrategy implements ImportInterface {
                     $model->setAttribute($config['attribute'], $value);
                 }
             }
-            //Check if model is unique, searching by attributes
-            if ($this->isActiveRecordUnique($uniqueAttributes)) {
-                $countInserted = $countInserted + $model->save();
+            //Check if model is unique and saved with success
+            if ($this->isActiveRecordUnique($uniqueAttributes) && $model->save()) {
+                $importedPks[] = $model->primaryKey;
             }
         }
-        return $countInserted;
+        return $importedPks;
     }
 
     /**

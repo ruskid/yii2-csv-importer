@@ -26,6 +26,7 @@ Usage
 
 ```php
 $importer = new CSVImporter;
+
 //Will read CSV file
 $importer->setData(new CSVReader([
     'filename' => $this->file->tempName,
@@ -34,8 +35,8 @@ $importer->setData(new CSVReader([
     ]
 ]));
 
-//Import multiple of Vendor types (Fast but not reliable)
-$importer->import(new MultipleImportStrategy([
+//Import multiple (Fast but not reliable). Will return number of inserted rows
+$numberRowsAffected = $importer->import(new MultipleImportStrategy([
     'tableName' => VendorSwType::tableName(),
     'configs' => [
         [
@@ -43,13 +44,14 @@ $importer->import(new MultipleImportStrategy([
             'value' => function($line) {
                 return $line[1];
             },
-            'unique' => true,//optional
+            'unique' => true, //Will filter and import unique values only. can by applied for 1+ attributes
+            'empty' => false //Will throw exception if csv contains empty values
         ]
     ],
 ]));
 
-//Import Active Records (Slow, but more reliable)
-$importer->import(new ARImportStrategy([
+//Import Active Records (Slow, but more reliable). Will return array of primary keys
+$primaryKeys = $importer->import(new ARImportStrategy([
     'className' => BusinessType::className(),
     'configs' => [
         [
@@ -57,12 +59,13 @@ $importer->import(new ARImportStrategy([
             'value' => function($line) {
                 return $line[2];
             },
-            'unique' => true,//optional
         ]
     ],
 ]));
 
-//More advanced example
+
+// More advanced example. You can use queries to set related data.
+// Use query caching for performance
 $importer->import(new MultipleImportStrategy([
     'tableName' => ProductInventory::tableName(),
     'configs' => [
@@ -71,7 +74,6 @@ $importer->import(new MultipleImportStrategy([
             'value' => function($line) {
                 return AppHelper::importStringFromCSV($line[7]);
             },
-            'empty' => true,//will accept "" and nulls
         ],
         [
             'attribute' => 'id_vendor_sw_type',
@@ -82,18 +84,38 @@ $importer->import(new MultipleImportStrategy([
                 });
                 return isset($vendor) ? $vendor->id : null;
             },
-        ],
+        ],   
+    ],
+]));
+
+//Special case only available with Active Record Strategy. 
+
+$primaryKeys = $importer->import(new ARImportStrategy([
+    'className' => Fabrica::className(),
+    'configs' => [
         [
-            'attribute' => 'id_business_type',
+            'attribute' => 'name',
             'value' => function($line) {
-                $name = AppHelper::importStringFromCSV($line[2]);
-                $vendor = BusinessType::getDb()->cache(function ($db) use($name) {
-                    return BusinessType::find()->where(['name' => $name])->one();
-                });
-                return isset($vendor) ? $vendor->id : null;
+                return $line[0];
             },
-            'empty' => true
+        ]
+    ],
+]));
+
+//Import product after fabrica import
+$importer->import(new MultipleImportStrategy([
+    'tableName' => Product::tableName(),
+    'configs' => [
+        [
+            'attribute' => 'id_fabrica',
+            'value' => function($line) use (&$primaryKeys) {
+                $fk = array_shift($primaryKeys);
+                return $fk;
+            },
+            'unique' => true,
+            'empty' => false
         ],     
     ],
 ]));
+
 ```

@@ -27,12 +27,6 @@ class MultipleImportStrategy extends BaseImportStrategy implements ImportInterfa
     public $tableName;
 
     /**
-     * Attribute configs on how to import data.
-     * @var array
-     */
-    public $configs;
-
-    /**
      * Limit items per single insert query. 
      * On batch insert the single query can become huge and you can get mysql exception: 
      * "Communication link failure: 1153 Got a packet bigger than 'max_allowed_packet' bytes". 
@@ -47,7 +41,15 @@ class MultipleImportStrategy extends BaseImportStrategy implements ImportInterfa
      * @throws Exception
      */
     public function __construct() {
-        parent::__construct();
+        $arguments = func_get_args();
+        if (!empty($arguments)) {
+            foreach ($arguments[0] as $key => $property) {
+                if (property_exists($this, $key)) {
+                    $this->{$key} = $property;
+                }
+            }
+        }
+
         if ($this->tableName === null) {
             throw new Exception(__CLASS__ . ' tableName is required.');
         }
@@ -67,9 +69,9 @@ class MultipleImportStrategy extends BaseImportStrategy implements ImportInterfa
 
         $countInserts = 0;
         $chunks = array_chunk($values, $this->maxItemsPerInsert);
-        foreach($chunks as $chunk){//Execute multiple queries
+        foreach ($chunks as $chunk) {//Execute multiple queries
             $countInserts += \Yii::$app->db->createCommand()
-                                ->batchInsert($this->tableName, $attributes, $chunk)->execute();
+                            ->batchInsert($this->tableName, $attributes, $chunk)->execute();
         }
         return $countInserts;
     }
@@ -96,10 +98,8 @@ class MultipleImportStrategy extends BaseImportStrategy implements ImportInterfa
         foreach ($data as $i => $row) {
             foreach ($this->configs as $config) {
                 $value = call_user_func($config['value'], $row);
-                //Do not save empty values if empty true not set explicitly
-                if (!empty($value) || (isset($config['empty']) && $config['empty'])) {
-                    $values[$i][$config['attribute']] = $value;
-                }
+                $this->checkValueForEmpty($value, $config);
+                $values[$i][$config['attribute']] = $value;
             }
         }
         //Filter unique values by unique attributes

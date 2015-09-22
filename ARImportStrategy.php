@@ -27,16 +27,18 @@ class ARImportStrategy extends BaseImportStrategy implements ImportInterface {
     public $className;
 
     /**
-     * Attribute configs on how to import data.
-     * @var array
-     */
-    public $configs;
-
-    /**
      * @throws Exception
      */
     public function __construct() {
-        parent::__construct();
+        $arguments = func_get_args();
+        if (!empty($arguments)) {
+            foreach ($arguments[0] as $key => $property) {
+                if (property_exists($this, $key)) {
+                    $this->{$key} = $property;
+                }
+            }
+        }
+        
         if ($this->className === null) {
             throw new Exception(__CLASS__ . ' className is required.');
         }
@@ -59,7 +61,8 @@ class ARImportStrategy extends BaseImportStrategy implements ImportInterface {
             foreach ($this->configs as $config) {
                 if (isset($config['attribute']) && $model->hasAttribute($config['attribute'])) {
                     $value = call_user_func($config['value'], $row);
-
+                    $this->checkValueForEmpty($value, $config);
+                    
                     //Create array of unique attributes
                     if (isset($config['unique']) && $config['unique']) {
                         $uniqueAttributes[$config['attribute']] = $value;

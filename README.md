@@ -15,7 +15,7 @@ php composer.phar require --prefer-dist ruskid/yii2-csv-importer "dev-master"
 or add
 
 ```
-"ruskid/yii2-csv-importer": "*"
+"ruskid/yii2-csv-importer": "dev-master"
 ```
 
 to the require section of your `composer.json` file.
@@ -45,7 +45,6 @@ $numberRowsAffected = $importer->import(new MultipleImportStrategy([
                 return $line[1];
             },
             'unique' => true, //Will filter and import unique values only. can by applied for 1+ attributes
-            'empty' => false //Will throw exception if csv contains empty values
         ]
     ],
 ]));
@@ -72,7 +71,8 @@ $importer->import(new MultipleImportStrategy([
         [
             'attribute' => 'product_name',
             'value' => function($line) {
-                return AppHelper::importStringFromCSV($line[7]);
+                //You cand perform your filters and excludes here. Empty exclude example:
+                return $line[7] != "" AppHelper::importStringFromCSV($line[7]) : null;
             },
         ],
         [
@@ -88,8 +88,8 @@ $importer->import(new MultipleImportStrategy([
     ],
 ]));
 
-//Special case only available with Active Record Strategy. 
-
+//Special case only available with Active Record Strategy.
+//Get primary key list of new imported items for later use.
 $primaryKeys = $importer->import(new ARImportStrategy([
     'className' => Fabrica::className(),
     'configs' => [
@@ -102,20 +102,18 @@ $primaryKeys = $importer->import(new ARImportStrategy([
     ],
 ]));
 
-//Import product after fabrica import
+//You can use the primary key list for the next import of related data.
+//The order of primary key items will be the same as in csv file.
 $importer->import(new MultipleImportStrategy([
     'tableName' => Product::tableName(),
     'configs' => [
         [
             'attribute' => 'id_fabrica',
             'value' => function($line) use (&$primaryKeys) {
-                $fk = array_shift($primaryKeys);
-                return $fk;
+                return array_shift($primaryKeys);
             },
             'unique' => true,
-            'empty' => false
         ],     
     ],
 ]));
-
 ```

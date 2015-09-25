@@ -54,14 +54,13 @@ class ARImportStrategy extends BaseImportStrategy implements ImportInterface {
      */
     public function import(&$data) {
         $importedPks = [];
-        foreach ($data as $i => $row) {
+        foreach ($data as $row) {
             /* @var $model \yii\db\ActiveRecord */
             $model = new $this->className;
             $uniqueAttributes = [];
             foreach ($this->configs as $config) {
                 if (isset($config['attribute']) && $model->hasAttribute($config['attribute'])) {
                     $value = call_user_func($config['value'], $row);
-                    $this->checkValueForEmpty($value, $config, $i);
                     
                     //Create array of unique attributes
                     if (isset($config['unique']) && $config['unique']) {

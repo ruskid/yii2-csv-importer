@@ -116,4 +116,39 @@ $importer->import(new MultipleImportStrategy([
         ],     
     ],
 ]));
+
+
+//You can skip CSV Row / Active Record import if some csv row doesn't meet the requirements.
+$importer->import(new MultipleImportStrategy([
+    'tableName' => ProductCategory::tableName(),
+    'configs' => [
+        [
+            'attribute' => 'name',
+            'value' => function($line) {
+                return $line[0];
+            },
+        ],
+        [
+            'attribute' => 'description',
+            'value' => function($line) {
+                return $line[1];
+            },
+        ],
+        [
+            'attribute' => 'estado',
+            'value' => function($line) {
+                return $line[2];
+            },
+        ]
+    ],
+    //All ACTIVE categories that don't have name set to 'MS_SQLSERVER' or empty will be imported.
+    'skipImport' => function($line){
+        if($line[0] == 'MS_SQLSERVER' || $line[0] == ""){
+            return true;
+        }
+        if($line[2] == 'NOT ACTIVE'){
+            return true;
+        }
+    }           
+]));
 ```

@@ -96,9 +96,12 @@ class MultipleImportStrategy extends BaseImportStrategy implements ImportInterfa
     private function getValues(&$data) {
         $values = [];
         foreach ($data as $i => $row) {
-            foreach ($this->configs as $config) {
-                $value = call_user_func($config['value'], $row);
-                $values[$i][$config['attribute']] = $value;
+            $skipImport = isset($this->skipImport) ? call_user_func($this->skipImport, $row) : false;
+            if (!$skipImport) {
+                foreach ($this->configs as $config) {
+                    $value = call_user_func($config['value'], $row);
+                    $values[$i][$config['attribute']] = $value;
+                }
             }
         }
         //Filter unique values by unique attributes

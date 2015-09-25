@@ -38,7 +38,7 @@ class ARImportStrategy extends BaseImportStrategy implements ImportInterface {
                 }
             }
         }
-        
+
         if ($this->className === null) {
             throw new Exception(__CLASS__ . ' className is required.');
         }
@@ -55,25 +55,28 @@ class ARImportStrategy extends BaseImportStrategy implements ImportInterface {
     public function import(&$data) {
         $importedPks = [];
         foreach ($data as $row) {
-            /* @var $model \yii\db\ActiveRecord */
-            $model = new $this->className;
-            $uniqueAttributes = [];
-            foreach ($this->configs as $config) {
-                if (isset($config['attribute']) && $model->hasAttribute($config['attribute'])) {
-                    $value = call_user_func($config['value'], $row);
-                    
-                    //Create array of unique attributes
-                    if (isset($config['unique']) && $config['unique']) {
-                        $uniqueAttributes[$config['attribute']] = $value;
-                    }
+            $skipImport = isset($this->skipImport) ? call_user_func($this->skipImport, $row) : false;
+            if (!$skipImport) {
+                /* @var $model \yii\db\ActiveRecord */
+                $model = new $this->className;
+                $uniqueAttributes = [];
+                foreach ($this->configs as $config) {
+                    if (isset($config['attribute']) && $model->hasAttribute($config['attribute'])) {
+                        $value = call_user_func($config['value'], $row);
 
-                    //Set value to the model
-                    $model->setAttribute($config['attribute'], $value);
+                        //Create array of unique attributes
+                        if (isset($config['unique']) && $config['unique']) {
+                            $uniqueAttributes[$config['attribute']] = $value;
+                        }
+
+                        //Set value to the model
+                        $model->setAttribute($config['attribute'], $value);
+                    }
                 }
-            }
-            //Check if model is unique and saved with success
-            if ($this->isActiveRecordUnique($uniqueAttributes) && $model->save()) {
-                $importedPks[] = $model->primaryKey;
+                //Check if model is unique and saved with success
+                if ($this->isActiveRecordUnique($uniqueAttributes) && $model->save()) {
+                    $importedPks[] = $model->primaryKey;
+                }
             }
         }
         return $importedPks;

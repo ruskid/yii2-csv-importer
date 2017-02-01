@@ -151,4 +151,26 @@ $importer->import(new MultipleImportStrategy([
         }
     }           
 ]));
+
+//Import or update multiple (Fast but not reliable). Will return number of inserted, updated and unchanged rows
+$records = $importer->import(new MultipleUpdateStrategy([
+	'className' => Customer::className(),
+	'csvKey' => function ($line) {
+		return $line[0];
+	},
+	'rowKey' => function ($row) {
+		return $row['gecom_id'];
+	},
+	'skipImport' => function ($line) {
+		return !$line[0];
+	},
+	'configs' => [
+		[
+			'attribute' => 'customer_id',
+			'value' => function($line) {
+				return $line[0];
+			},
+		],
+	],
+]));
 ```

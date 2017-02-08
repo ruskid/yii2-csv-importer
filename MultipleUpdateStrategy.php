@@ -88,10 +88,15 @@ class MultipleUpdateStrategy extends MultipleImportStrategy implements ImportInt
 				unset($dataReindexed[$key]);
 
 				// table row should be updated or unchanged
-				$values = $this->getLineValues($line);
-				if ($this->changed($row, $values)) {
-					if ($this->updateRecord($row, $values)) {
-						$records['updated'] ++;
+				$skipImport = isset($this->skipImport) ? call_user_func($this->skipImport, $line) : false;
+				if(!$skipImport) {
+					$values = $this->getLineValues($line);
+					if ($this->changed($row, $values)) {
+						if ($this->updateRecord($row, $values)) {
+							$records['updated'] ++;
+						}
+					} else {
+						$records['unchanged'] ++;
 					}
 				} else {
 					$records['unchanged'] ++;

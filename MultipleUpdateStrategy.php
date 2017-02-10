@@ -8,6 +8,7 @@ namespace ruskid\csvimporter;
 
 use yii\base\Exception;
 use yii\db\Query;
+use Yii;
 
 /**
  * Update from CSV. This will create|update rows of an ActiveRecord table.
@@ -33,7 +34,7 @@ class MultipleUpdateStrategy extends MultipleImportStrategy implements ImportInt
 	 * @var \Closure a function that returns a value that will be used to index the corresponding
 	 * AR table row. The signature of the function should be the following: `function ($row)`.
 	 * This value must be unique for each table row.
-	 * Where `$row` is an array representing one row of the AR table file.
+	 * Where `$row` is an array representing one row of the AR table.
 	 */
 	public $rowKey;
 
@@ -92,9 +93,7 @@ class MultipleUpdateStrategy extends MultipleImportStrategy implements ImportInt
 				if(!$skipImport) {
 					$values = $this->getLineValues($line);
 					if ($this->changed($row, $values)) {
-						if ($this->updateRecord($row, $values)) {
-							$records['updated'] ++;
-						}
+						$records['updated'] += $this->updateRecord($row, $values);
 					} else {
 						$records['unchanged'] ++;
 					}
@@ -140,22 +139,11 @@ class MultipleUpdateStrategy extends MultipleImportStrategy implements ImportInt
 	/**
 	 * Updates $row with $values
 	 * @param type $row
-	 * @param type $falues
-	 * @return boolean whether the operation was successful or not
+	 * @param type $values
+	 * @return integer the number of affected rows
 	 */
 	public function updateRecord($row, $values) {
-		$model = call_user_func($this->className . '::findOne', $row);
-		if ($model) {
-			//Set value to the model
-			$model->setAttributes($values);
-			// The model is not validated to keep consistency with multiple update approach
-			if ($model->save(false)) {
-				return true;
-			} else {
-				return false;
-			}
-		}
-		return false;
+		return Yii::$app->db->createCommand()->update($this->tableName, $values, $row)->execute();
 	}
 
 }

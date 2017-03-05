@@ -22,10 +22,10 @@ class CSVReader {
     public $filename;
 
     /**
-     * FGETCSV() options: length, delimiter, enclosure, escape.
+     * FGETCSV() options: length, delimiter, enclosure, escape, startFromLine.
      * @var array 
      */
-    public $fgetcsvOptions = ['length' => 0, 'delimiter' => ',', 'enclosure' => '"', 'escape' => "\\"];
+    public $fgetcsvOptions = ['length' => 0, 'delimiter' => ',', 'enclosure' => '"', 'escape' => "\\", 'startFromLine' => 1];
 
     /**
      * Start insert from line number. Set 1 if CSV file has header.
@@ -65,6 +65,7 @@ class CSVReader {
         $delimiter = isset($this->fgetcsvOptions['delimiter']) ? $this->fgetcsvOptions['delimiter'] : ',';
         $enclosure = isset($this->fgetcsvOptions['enclosure']) ? $this->fgetcsvOptions['enclosure'] : '"';
         $escape = isset($this->fgetcsvOptions['escape']) ? $this->fgetcsvOptions['escape'] : "\\";
+        $startFromLine = isset($this->fgetcsvOptions['startFromLine']) ? $this->fgetcsvOptions['startFromLine'] : 1;
 
         $lines = []; //Clear and set rows
         if (($fp = fopen($this->filename, 'r')) !== FALSE) {

@@ -9,27 +9,33 @@ namespace ruskid\csvimporter;
 use Yii;
 
 /**
- * Update from CSV. This will create|update rows of an ActiveRecord table.
+ * Update from CSV. This will create|update instances of ActiveRecord using its validation.
  * A csv line is considered a new record if its key does not match any AR table row key.
  */
-class MultipleUpdateStrategy extends BaseUpdateStrategy{
+class ARUpdateStrategy extends BaseUpdateStrategy{
 
 	/**
 	 * @inheritdoc
 	 */
 	protected function importNewRecords(&$data) {
-		$strategy = new MultipleImportStrategy([
-			'tableName' => $this->tableName,
+		$strategy = new ARImportStrategy([
+			'className' => $this->className,
 			'configs' => $this->configs,
 			'skipImport' => $this->skipImport,
 		]);
-		return $strategy->import($data);
+		return count($strategy->import($data));
 	}
 
 	/**
 	 * @inheritdoc
 	 */
 	protected function updateRecord($row, $values) {
-		return Yii::$app->db->createCommand()->update($this->tableName, $values, $row)->execute();
+		$model = $this->className::find()->where($row)->one();
+		if ($model) {
+			$model->setAttributes($values, false);
+			return $model->save();
+		} else {
+			return false;
+		}
 	}
 }

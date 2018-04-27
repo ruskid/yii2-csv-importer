@@ -153,6 +153,8 @@ $importer->import(new MultipleImportStrategy([
 ]));
 
 //Import or update multiple (Fast but not reliable). Will return number of inserted, updated and unchanged rows
+//ARUpdateStrategy can be used instead of MultipleUpdateStrategy if you want to use AR validation.
+//The returned value will be the number of inserted, updated and unchanged rows in both cases.
 $records = $importer->import(new MultipleUpdateStrategy([
 	'className' => Customer::className(),
 	'csvKey' => function ($line) {

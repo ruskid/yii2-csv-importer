@@ -58,6 +58,13 @@ $primaryKeys = $importer->import(new ARImportStrategy([
             'value' => function($line) {
                 return $line[2];
             },
+        ],
+        [
+            'attribute' => 'items',
+            'virtual' => true, //set non AR DB attribute (behavior or public model attribute) 
+            'value' => function($line) {
+                return Item::find()->select(['id'])->column('id');
+            },
         ]
     ],
 ]));

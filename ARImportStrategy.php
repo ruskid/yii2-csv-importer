@@ -71,6 +71,11 @@ class ARImportStrategy extends BaseImportStrategy implements ImportInterface {
 
                         //Set value to the model
                         $model->setAttribute($config['attribute'], $value);
+                    } else
+                    if (isset($config['virtual']) && $config['virtual']) {
+                        //set value to virtual attribute
+                        $value = call_user_func($config['value'], $row);
+                        $model->{$config['attribute']} = $value;
                     }
                 }
                 //Check if model is unique and saved with success
